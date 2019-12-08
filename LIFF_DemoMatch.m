@@ -10,21 +10,20 @@
 % Part of LiFF Light Field Feature Toolbox v0.0.1
 % Copyright (c) 2019 Donald G. Dansereau
 
-clearvars
-    
-%---Tweakables---
-InFile1 = 'SampleScenes/IMG_2145.eslf.png';
-InFile2 = 'SampleScenes/IMG_2146.eslf.png';
 
-%---Load---
-fprintf('Loading light fields and converting to grayscale...\n');
-LF1 = LiFF_ReadESLF(InFile1);
+% %---Tweakables---
+InFolder1 = 'SampleScenes/cube2';
+InFolder2 = 'SampleScenes/cube4';
+
+% %---Load---
+% fprintf('Loading light fields and converting to grayscale...\n');
+LF1 = png_reader(InFolder1);
 LF1 = LF1(2:end-2,2:end-2,:,:,:); % remove pixels on lenslet borders, 2 on the bot/right, 1 on top/left
 LF1 = single(LF1);        % convert to float
 LF1 = LF1 ./ max(LF1(:));  % normalize
-LF1 = LiFF_RGB2Gray(LF1); % convert to grayscale
+LF1 = LiFF_RGB2Gray(LF1); % convert toLF grayscale
 
-LF2 = LiFF_ReadESLF(InFile2);
+LF2 = png_reader(InFolder2);
 LF2 = LF2(2:end-2,2:end-2,:,:,:); % remove pixels on lenslet borders, 2 on the bot/right, 1 on top/left
 LF2 = single(LF2);        % convert to float
 LF2 = LF2 ./ max(LF2(:));  % normalize
@@ -43,5 +42,6 @@ indexPairs = matchFeatures(d1',d2');
 matchedPoints1 = f1(:, indexPairs(:,1));
 matchedPoints2 = f2(:, indexPairs(:,2));
 
-figure; showMatchedFeatures(I1,I2, matchedPoints1(1:2, :)', matchedPoints2(1:2, :)');
+figure; showMatchedFeatures(I1,I2, matchedPoints1(1:2, :)', matchedPoints2(1:2, :)',  'montage');
 
+[F,inliers] = estimateFundamentalMatrix(matchedPoints1(1:2, :)', matchedPoints2(1:2, :)','NumTrials',4000);
