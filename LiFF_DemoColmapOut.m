@@ -20,8 +20,10 @@
 clearvars
 
 %---Tweakables---
-InFile = 'SampleScenes/IMG_5776.eslf.png';
-OutFile = 'SampleScenes/IMG_5776.png.txt';
+InFile = 'SampleScenes/IMG_2298__Decoded.mat';
+OutFile = 'SampleScenes/2298.txt';
+
+load(InFile)
 
 PeakThresh = 0.0066;
 EdgeThresh = 10;
@@ -31,20 +33,12 @@ LevelsPerOctave = 3;
 
 %---Load with alpha, to ignore invalid pixels---
 fprintf('Loading light field and converting to grayscale...\n');
-HasAlpha = true;
-LF = LiFF_ReadESLF(InFile, [], HasAlpha);
+LF = LF(:, :, :, :, 1:3);
 LF = LF(2:end-2,2:end-2,:,:,:);  % trim edge pixels, force odd view count
-OrigClass = class(LF);
 LF = single(LF); % convert to float
-LF = LF ./ single(intmax(OrigClass)); % normalize
-
-LFW = LF(:,:,:,:,4); % strip off weight channel
-LF = LF(:,:,:,:,1:3); 
+LF = LF ./ max(LF(:));
+LF3 = LF;
 LF = LiFF_RGB2Gray(LF); % convert to grayscale
-
-LF(:,:,:,:,2) = LFW; % put back weight channel for equalization
-LF = LiFF_HistEqualize(LF);
-LF = squeeze(LF(:,:,:,:,1)); % remove weight channel
 
 %---Find features and descriptors---
 fprintf('Extracting features...\n');
@@ -58,7 +52,7 @@ toc
 fprintf('Displaying features...\n');
 figure(1);
 clf
-Thumb = squeeze(LF(ceil(end/2),ceil(end/2),:,:));
+Thumb = squeeze(LF3(ceil(end/2),ceil(end/2),:,:,:));
 imshow(Thumb);
 
 MinSlope = min(f(5,:));
@@ -75,5 +69,6 @@ title(sprintf('LiFF -- %d features', size(f,2)))
 fprintf('Saving features to %s...\n', OutFile);
 [f,d] = LiFF_ConvertLiFFToColmap(f,d);
 LiFF_WriteFeatsToColmapFiles( OutFile, f,d );
+imwrite(Thumb, OutFile(1:end - 4) + ".png");
 
 fprintf('Done.\n');
